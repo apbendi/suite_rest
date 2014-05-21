@@ -1,5 +1,8 @@
 require "suite_rest/version"
 
 module SuiteRest
-  # Your code goes here...
+  
+  def self.configure
+    return 127
+  end
 end
