@@ -1,4 +1,5 @@
 require "suite_rest/version"
+require "suite_rest/rest_service"
 
 module SuiteRest
   class << self
