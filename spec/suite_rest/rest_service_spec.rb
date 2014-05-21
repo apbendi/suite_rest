@@ -38,18 +38,18 @@ describe SuiteRest::RestService do
     end
 
     it "should build a correct URI" do
-      @get_svc.uri.should eq(uri)
+      @get_svc.service_uri.should eq(uri)
     end
 
     context "in a prodution environment" do
       let(:uri) {"https://rest.netsuite.com/app/site/hosting/restlet.nl?script=#{script_id}&deploy=#{deploy_id}" }
-      
+
       before do
         SuiteRest.configuration.sandbox = false
       end
 
       it "should return a production string" do
-        @get_svc.uri.should eq(uri)
+        @get_svc.service_uri.should eq(uri)
       end
     end
   end
