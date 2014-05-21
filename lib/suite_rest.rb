@@ -20,5 +20,12 @@ module SuiteRest
     def initialize
       @sandbox = true # safe default
     end
+
+    def auth_string
+      "NLAuth nlauth_account=" + @account.to_s + \
+          ", nlauth_email=" + @email.to_s + \
+          ", nlauth_signature=" + @signature.to_s + \
+          ", nlauth_role=" + @role.to_s
+    end
   end
 end

@@ -19,6 +19,12 @@ describe SuiteRest do
     let(:email)     { "fake@gmail.com" }
     let(:role)      { 1001 }
     let(:signature) { "asdfji2435;'!"}
+    let(:auth_string) {
+          "NLAuth nlauth_account=" + account.to_s + \
+          ", nlauth_email=" + email.to_s + \
+          ", nlauth_signature=" + signature.to_s + \
+          ", nlauth_role=" + role.to_s
+        }
 
     before(:each) { SuiteRest.reset! }
 
@@ -39,6 +45,10 @@ describe SuiteRest do
         SuiteRest.configuration.signature.should eq(signature)
         SuiteRest.configuration.sandbox.should eq(true)
       end
+
+      it "should return a proper auth string" do
+        SuiteRest.configuration.auth_string.should eq(auth_string)
+      end
     end
 
     context "when creating a basic production config" do
@@ -58,6 +68,10 @@ describe SuiteRest do
         SuiteRest.configuration.role.should eq(role)
         SuiteRest.configuration.signature.should eq(signature)
         SuiteRest.configuration.sandbox.should eq(false)
+      end
+
+      it "should return a proper auth string" do
+        SuiteRest.configuration.auth_string.should eq(auth_string)
       end
     end
   end
