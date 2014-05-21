@@ -10,6 +10,10 @@ module SuiteRest
     yield(configuration)
   end
 
+  def self.reset!
+    self.configuration = Configuration.new
+  end
+
   class Configuration
     attr_accessor :account, :sandbox, :email, :role, :signature
 
