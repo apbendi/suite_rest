@@ -1,5 +1,6 @@
 require 'uri'
 require 'net/http'
+require 'json'
 
 require "suite_rest/version"
 require "suite_rest/rest_service"

@@ -36,22 +36,55 @@ module SuiteRest
       url_string
     end
 
+    def payloadify(args)
+      payload = {}
+      args_def.each do |arg_def|
+        payload[camel_case_lower(arg_def.to_s)] = args[arg_def]
+      end
+      payload.to_json
+    end
+
     def get(args={})
-      uri_args = self.urlify(args)
-      uri = self.parsed_uri(uri_args)
+      uri = self.parsed_uri(self.urlify(args))
       http = self.http(uri)
 
       get_request = Net::HTTP::Get.new(uri.request_uri)
-      get_request.add_field("Authorization", SuiteRest.configuration.auth_string)
-      get_request.add_field("Content-Type", "application/json")
+      add_request_fields(get_request)
 
       http.request(get_request)
+    end
+
+    def post(args={})
+      uri = self.parsed_uri
+      http = self.http(uri)
+
+      post_request = Net::HTTP::Post.new(uri.request_uri)
+      add_request_fields(post_request)
+      post_request.body = payloadify(args)
+
+      http.request(post_request)
+    end
+
+    def call(args={})
+      case @type
+      when :get
+        self.get(args)
+      when :post
+        self.post(args)
+      else
+        throw "Invalid Service Type: #{@type}"
+      end
     end
 
     private
 
     def camel_case_lower(a_string)
       a_string.split('_').inject([]){ |buffer,e| buffer.push(buffer.empty? ? e : e.capitalize) }.join
+    end
+
+    def add_request_fields(request)
+      request.add_field("Authorization", SuiteRest.configuration.auth_string)
+      request.add_field("Content-Type", "application/json")
     end
   end
 end
