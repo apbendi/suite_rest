@@ -1,6 +1,5 @@
 module SuiteRest
   class RestService
-
     attr_accessor :type, :script_id, :deploy_id, :args
 
     def initialize(service_def)
@@ -18,5 +17,15 @@ module SuiteRest
       end
     end
 
+    def parsed_uri(args="")
+        URI.parse(self.service_uri + URI.escape(args))
+    end
+
+    def http(parsed_uri)
+      http = Net::HTTP.new(parsed_uri.host, parsed_uri.port)
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      http
+    end
   end
 end
