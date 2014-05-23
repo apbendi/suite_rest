@@ -8,8 +8,8 @@ Gem::Specification.new do |gem|
   gem.version       = SuiteRest::VERSION
   gem.authors       = ["Ben DiFrancesco"]
   gem.email         = ["ben.difrancesco@gmail.com"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.description   = "Allows easy interaction with NetSuite RESTlets"
+  gem.summary       = ""
   gem.homepage      = ""
 
   gem.files         = `git ls-files`.split($/)
