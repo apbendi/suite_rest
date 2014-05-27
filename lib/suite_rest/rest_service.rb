@@ -44,35 +44,64 @@ module SuiteRest
       payload.to_json
     end
 
-    def get(args={})
+    def self.parse_body(body)
+      begin
+        JSON.parse(body)
+      rescue JSON::ParserError
+        body.gsub(/"/, '')
+        # TODO? detect if this could be cast as an int, bool, or double and return as appropriate
+      end
+    end
+
+    def get_or_delete(args={})
       uri = self.parsed_uri(self.urlify(args))
       http = self.http(uri)
 
-      get_request = Net::HTTP::Get.new(uri.request_uri)
-      add_request_fields(get_request)
+      case @type
+      when :get
+        request = Net::HTTP::Get.new(uri.request_uri)
+      when :delete
+        request = Net::HTTP::Delete.new(uri.request_uri)
+      end
 
-      http.request(get_request)
+      add_request_fields(request)
+      response = http.request(request)
+
+      # TODO? Error checking
+
+      RestService.parse_body(response.body)
     end
 
-    def post(args={})
+    def post_or_put(args={})
       uri = self.parsed_uri
       http = self.http(uri)
 
-      post_request = Net::HTTP::Post.new(uri.request_uri)
+      case @type
+      when :put
+        post_request = Net::HTTP::Put.new(uri.request_uri)
+      when :post
+        post_request = Net::HTTP::Post.new(uri.request_uri)
+      end
       add_request_fields(post_request)
       post_request.body = payloadify(args)
 
-      http.request(post_request)
+      response = http.request(post_request)
+
+      # TODO? Error checking
+
+      RestService.parse_body(response.body)
     end
 
+    alias_method :put, :post_or_put
+    alias_method :post, :post_or_put
+    alias_method :get, :get_or_delete
+    alias_method :delete, :get_or_delete
+
     def call(args={})
-      case @type
-      when :get
-        self.get(args)
-      when :post
-        self.post(args)
-      else
-        throw "Invalid Service Type: #{@type}"
+      begin
+        self.send(@type, args)
+      rescue NoMethodError
+        raise "Invalid Service Type :#{@type}, use :get, :put, :post, or :delete"
       end
     end
 
