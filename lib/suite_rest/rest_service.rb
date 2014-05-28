@@ -9,37 +9,47 @@ module SuiteRest
       @args_def = service_def[:args_def]
     end
 
-    def service_uri
-      if SuiteRest.configuration.sandbox
+    def self.service_uri(script_id, deploy_id, is_sandbox)
+      if is_sandbox
         "https://rest.sandbox.netsuite.com/app/site/hosting/restlet.nl?script=#{script_id}&deploy=#{deploy_id}"
       else
         "https://rest.netsuite.com/app/site/hosting/restlet.nl?script=#{script_id}&deploy=#{deploy_id}"
       end
     end
 
-    def parsed_uri(args="")
-        URI.parse(self.service_uri + URI.escape(args))
+    def self.parsed_uri(script_id, deploy_id, is_sandbox, args="")
+        URI.parse(self.service_uri(script_id, deploy_id, is_sandbox) + URI.escape(args))
     end
 
-    def http(parsed_uri)
+    def self.http(parsed_uri)
       http = Net::HTTP.new(parsed_uri.host, parsed_uri.port)
       http.use_ssl = true
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       http
     end
 
-    def urlify(args)
+    def self.camel_case_lower(a_string)
+      a_string.split('_').inject([]){ |buffer,e| buffer.push(buffer.empty? ? e : e.capitalize) }.join
+    end
+
+    def self.add_request_fields(request, auth_string)
+      request.add_field("Authorization", auth_string)
+      request.add_field("Content-Type", "application/json")
+      #request.add_field("Content-Type", "text/plain") should this be an init option?
+    end
+
+    def self.urlify(args, args_def)
       url_string = ""
       args_def.each do |arg_def|
-        url_string = "#{url_string}&#{camel_case_lower(arg_def.to_s)}=#{args[arg_def]}"
+        url_string = "#{url_string}&#{self.camel_case_lower(arg_def.to_s)}=#{args[arg_def]}"
       end
       url_string
     end
 
-    def payloadify(args)
+    def self.payloadify(args, args_def)
       payload = {}
       args_def.each do |arg_def|
-        payload[camel_case_lower(arg_def.to_s)] = args[arg_def]
+        payload[self.camel_case_lower(arg_def.to_s)] = args[arg_def]
       end
       payload.to_json
     end
@@ -54,8 +64,9 @@ module SuiteRest
     end
 
     def get_or_delete(args={})
-      uri = self.parsed_uri(self.urlify(args))
-      http = self.http(uri)
+      uri = self.class.parsed_uri(@script_id, @deploy_id, 
+        SuiteRest.configuration.sandbox, self.class.urlify(args, @args_def))
+      http = self.class.http(uri)
 
       case @type
       when :get
@@ -64,7 +75,7 @@ module SuiteRest
         request = Net::HTTP::Delete.new(uri.request_uri)
       end
 
-      add_request_fields(request)
+      self.class.add_request_fields(request, SuiteRest.configuration.auth_string)
       response = http.request(request)
       
       # TODO? Error checking
@@ -74,28 +85,29 @@ module SuiteRest
         # return true/false based on server response
         response.instance_of?(Net::HTTPOK)
       else
-        RestService.parse_body(response.body)
+        self.class.parse_body(response.body)
       end
     end
 
     def post_or_put(args={})
-      uri = self.parsed_uri
-      http = self.http(uri)
+      uri = self.class.parsed_uri(@script_id, @deploy_id, SuiteRest.configuration.sandbox)
+      http = self.class.http(uri)
 
       case @type
       when :put
-        post_request = Net::HTTP::Put.new(uri.request_uri)
+        request = Net::HTTP::Put.new(uri.request_uri)
       when :post
-        post_request = Net::HTTP::Post.new(uri.request_uri)
+        request = Net::HTTP::Post.new(uri.request_uri)
       end
-      add_request_fields(post_request)
-      post_request.body = payloadify(args)
 
-      response = http.request(post_request)
+      self.class.add_request_fields(request, SuiteRest.configuration.auth_string)
+      request.body = self.class.payloadify(args, @args_def)
+
+      response = http.request(request)
 
       # TODO? Error checking
 
-      RestService.parse_body(response.body)
+      self.class.parse_body(response.body)
     end
 
     alias_method :put, :post_or_put
@@ -104,27 +116,18 @@ module SuiteRest
     alias_method :delete, :get_or_delete
 
     def call(args={})
-      begin
-        self.send(@type, args)
-      rescue NoMethodError => nme
-        if nme.to_s.include? "SuiteRest::RestService"
-          raise "Invalid Service Type :#{@type}, use :get, :put, :post, or :delete"
-        else
-          raise nme
-        end
+      case @type
+      when :put
+        self.put(args)
+      when :post
+        self.post(args)
+      when :get
+        self.get(args)
+      when :delete
+        self.delete(args)
+      else
+        raise "Invalid Service Type :#{@type}, use :get, :put, :post, or :delete"
       end
-    end
-
-    private
-
-    def camel_case_lower(a_string)
-      a_string.split('_').inject([]){ |buffer,e| buffer.push(buffer.empty? ? e : e.capitalize) }.join
-    end
-
-    def add_request_fields(request)
-      request.add_field("Authorization", SuiteRest.configuration.auth_string)
-      request.add_field("Content-Type", "application/json")
-      #request.add_field("Content-Type", "text/plain") should this be an init option?
     end
   end
 end
