@@ -68,6 +68,7 @@ describe SuiteRest::RestService do
       @http_get = double(Net::HTTP::Get)
       @http_post = double(Net::HTTP::Post)
       @http_put = double(Net::HTTP::Put)
+      @http_delete = double(Net::HTTP::Delete)
     end
 
     it "should retain the service definition arguments" do
@@ -157,7 +158,18 @@ describe SuiteRest::RestService do
       @http_put.should_receive(:body=).with(payload_args)
       @http.should_receive(:request).with(@http_put)
 
-      @put_svc.post(call_args)
+      @put_svc.put(call_args)
+    end
+
+    it "should build and execute a delete request" do
+      URI.should_receive(:parse).with(uri + URI.escape(uri_args)).and_return(@parsed_uri)
+      Net::HTTP.should_receive(:new).with(@parsed_uri.host, @parsed_uri.port).and_return(@http)
+      Net::HTTP::Delete.should_receive(:new).with(@parsed_uri.request_uri).and_return(@http_delete)
+      @http_delete.should_receive(:add_field).with("Authorization", SuiteRest.configuration.auth_string)
+      @http_delete.should_receive(:add_field).with("Content-Type", "application/json")
+      @http.should_receive(:request).with(@http_delete).and_return(double(Net::HTTPOK, :body => "", :instance_of? => true))
+
+      @delete_svc.delete(call_args).should eq(true)
     end
 
     it "should build and execute a post request" do
@@ -174,7 +186,7 @@ describe SuiteRest::RestService do
 
     it "should throw an error for a bad type" do
       @get_svc.type = :bad_type
-      expect{ @get_svc.call }.to raise_error(RuntimeError, "Invalid Service Type bad_type, use :get, :put, :post, or :delete")
+      expect{ @get_svc.call }.to raise_error(RuntimeError)
     end
 
     context "in a prodution environment" do

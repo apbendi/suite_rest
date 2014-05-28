@@ -66,10 +66,16 @@ module SuiteRest
 
       add_request_fields(request)
       response = http.request(request)
-
+      
       # TODO? Error checking
 
-      RestService.parse_body(response.body)
+      if @type == :delete
+        # By NS definition, delete restlets should not return anything, so we'll
+        # return true/false based on server response
+        response.instance_of?(Net::HTTPOK)
+      else
+        RestService.parse_body(response.body)
+      end
     end
 
     def post_or_put(args={})
@@ -100,8 +106,12 @@ module SuiteRest
     def call(args={})
       begin
         self.send(@type, args)
-      rescue NoMethodError
-        raise "Invalid Service Type :#{@type}, use :get, :put, :post, or :delete"
+      rescue NoMethodError => nme
+        if nme.to_s.include? "SuiteRest::RestService"
+          raise "Invalid Service Type :#{@type}, use :get, :put, :post, or :delete"
+        else
+          raise nme
+        end
       end
     end
 
@@ -114,6 +124,7 @@ module SuiteRest
     def add_request_fields(request)
       request.add_field("Authorization", SuiteRest.configuration.auth_string)
       request.add_field("Content-Type", "application/json")
+      #request.add_field("Content-Type", "text/plain") should this be an init option?
     end
   end
 end
