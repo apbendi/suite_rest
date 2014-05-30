@@ -8,7 +8,7 @@ module SuiteRest
       @type = service_def[:type]
       @script_id = service_def[:script_id]
       @deploy_id = service_def[:deploy_id]
-      @args_def = service_def[:args_def]
+      @args_def = service_def[:args_def] ? service_def[:args_def] : []
     end
 
     def get_or_delete(args={})
@@ -28,9 +28,9 @@ module SuiteRest
       
       # TODO? Error checking
 
+      # By NS definition, delete restlets should not return anything, so we'll
+      # return true/false based on server response
       if @type == :delete
-        # By NS definition, delete restlets should not return anything, so we'll
-        # return true/false based on server response
         response.instance_of?(Net::HTTPOK)
       else
         self.class.parse_body(response.body)

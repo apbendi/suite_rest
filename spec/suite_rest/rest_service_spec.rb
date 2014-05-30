@@ -10,8 +10,6 @@ describe SuiteRest::RestService do
     let(:script_id) { 29 }
     let(:deploy_id) { 1 }
     let(:args_def) { [:trans_id, :trans_type] }
-    let(:uri) { "https://rest.sandbox.netsuite.com/app/site/hosting/restlet.nl?script=#{script_id}&deploy=#{deploy_id}" }
-    let(:uri_args) { "&transId=45334&transType=invoice" }
     let(:payload_args) do
       {
         'transId'   => 45334,
@@ -62,16 +60,14 @@ describe SuiteRest::RestService do
         :args_def       => args_def
         )
 
-      @parsed_uri = double(URI, 
-        :host => "uri_host", :port => "uri_port", :request_uri => "uri_request_uri")
-      @http = double(Net::HTTP, :use_ssl= => nil, :verify_mode= => nil, :request => double(:body => "\"Hello World\""))
-      @http_get = double(Net::HTTP::Get)
-      @http_post = double(Net::HTTP::Post)
-      @http_put = double(Net::HTTP::Put)
-      @http_delete = double(Net::HTTP::Delete)
+      @http = double(Net::HTTP, :use_ssl= => nil, :verify_mode= => nil, :request => double(Net::HTTPOK, :body => "body"))
+      @http_get = double(Net::HTTP::Get, :add_field => nil)
+      @http_post = double(Net::HTTP::Post, :add_field => nil)
+      @http_put = double(Net::HTTP::Put, :add_field => nil)
+      @http_delete = double(Net::HTTP::Delete, :add_field => nil)
     end
 
-    it "should retain the service definition arguments" do
+    it "should retain each service definition arguments" do
       @get_svc.type.should eq(:get)
       @get_svc.script_id.should eq(script_id)
       @get_svc.deploy_id.should eq(deploy_id)
@@ -82,40 +78,26 @@ describe SuiteRest::RestService do
       @put_svc.deploy_id.should eq(deploy_id)
       @put_svc.args_def.should eq(args_def)
 
+      @delete_svc.type.should eq(:delete)
+      @delete_svc.script_id.should eq(script_id)
+      @delete_svc.deploy_id.should eq(deploy_id)
+      @delete_svc.args_def.should eq(args_def)
+
       @post_svc.type.should eq(:post)
       @post_svc.script_id.should eq(script_id)
       @post_svc.deploy_id.should eq(deploy_id)
       @post_svc.args_def.should eq(args_def)
     end
 
-    it "should build a correct URI" do
-      @get_svc.service_uri.should eq(uri)
-    end
+    context "when args_def is not defined" do
+      let(:args_def) { nil }
 
-    it "should parse the URI string correctly" do
-      URI.should_receive(:parse).with(uri).and_return(@parsed_uri)
-      @get_svc.parsed_uri.should eq(@parsed_uri)
-    end
-
-    it "should parse the URI string with args correctly" do
-      URI.should_receive(:parse).with(uri + URI.escape(uri_args)).and_return(@parsed_uri)
-      @get_svc.parsed_uri(uri_args).should eq(@parsed_uri)
-    end
-
-    it "should create a Net::HTTP object" do
-      Net::HTTP.should_receive(:new).with(@parsed_uri.host, @parsed_uri.port).and_return(@http)
-      @http.should_receive(:use_ssl=).with(true)
-      @http.should_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
-
-      @get_svc.http(@parsed_uri)
-    end
-
-    it "should create an arg string for the url" do
-      @get_svc.urlify(call_args).should eq(uri_args)
-    end
-
-    it "should create a json payload" do
-      @post_svc.payloadify(call_args).should eq(payload_args)
+      it "should default to empty array args_def" do
+        @get_svc.args_def.should eq([])
+        @put_svc.args_def.should eq([])
+        @delete_svc.args_def.should eq([])
+        @post_svc.args_def.should eq([])
+      end
     end
 
     it "should call get for a get service" do
@@ -139,47 +121,38 @@ describe SuiteRest::RestService do
     end
 
     it "should build and execute a get request" do
-      URI.should_receive(:parse).with(uri + URI.escape(uri_args)).and_return(@parsed_uri)
-      Net::HTTP.should_receive(:new).with(@parsed_uri.host, @parsed_uri.port).and_return(@http)
-      Net::HTTP::Get.should_receive(:new).with(@parsed_uri.request_uri).and_return(@http_get)
-      @http_get.should_receive(:add_field).with("Authorization", SuiteRest.configuration.auth_string)
-      @http_get.should_receive(:add_field).with("Content-Type", "application/json")
+      SuiteRest::RestService.should_receive(:http).and_return(@http)
+      Net::HTTP::Get.should_receive(:new).and_return(@http_get)
       @http.should_receive(:request).with(@http_get)
+      SuiteRest::RestService.should_receive(:parse_body).with("body")
 
       @get_svc.get(call_args)
     end
 
     it "should build and execute a put request" do
-      URI.should(receive(:parse).with(uri).and_return(@parsed_uri))
-      Net::HTTP.should_receive(:new).with(@parsed_uri.host, @parsed_uri.port).and_return(@http)
-      Net::HTTP::Put.should_receive(:new).with(@parsed_uri.request_uri).and_return(@http_put)
-      @http_put.should_receive(:add_field).with("Authorization", SuiteRest.configuration.auth_string)
-      @http_put.should_receive(:add_field).with("Content-Type", "application/json")
+      SuiteRest::RestService.should_receive(:http).and_return(@http)
+      Net::HTTP::Put.should_receive(:new).and_return(@http_put)
       @http_put.should_receive(:body=).with(payload_args)
       @http.should_receive(:request).with(@http_put)
+      SuiteRest::RestService.should_receive(:parse_body).with("body")
 
-      @put_svc.put(call_args)
+       @put_svc.put(call_args)
     end
 
     it "should build and execute a delete request" do
-      URI.should_receive(:parse).with(uri + URI.escape(uri_args)).and_return(@parsed_uri)
-      Net::HTTP.should_receive(:new).with(@parsed_uri.host, @parsed_uri.port).and_return(@http)
-      Net::HTTP::Delete.should_receive(:new).with(@parsed_uri.request_uri).and_return(@http_delete)
-      @http_delete.should_receive(:add_field).with("Authorization", SuiteRest.configuration.auth_string)
-      @http_delete.should_receive(:add_field).with("Content-Type", "application/json")
+      SuiteRest::RestService.should_receive(:http).and_return(@http)
+      Net::HTTP::Delete.should_receive(:new).and_return(@http_delete)
       @http.should_receive(:request).with(@http_delete).and_return(double(Net::HTTPOK, :body => "", :instance_of? => true))
 
       @delete_svc.delete(call_args).should eq(true)
     end
 
     it "should build and execute a post request" do
-      URI.should(receive(:parse).with(uri).and_return(@parsed_uri))
-      Net::HTTP.should_receive(:new).with(@parsed_uri.host, @parsed_uri.port).and_return(@http)
-      Net::HTTP::Post.should_receive(:new).with(@parsed_uri.request_uri).and_return(@http_post)
-      @http_post.should_receive(:add_field).with("Authorization", SuiteRest.configuration.auth_string)
-      @http_post.should_receive(:add_field).with("Content-Type", "application/json")
+      SuiteRest::RestService.should_receive(:http).and_return(@http)
+      Net::HTTP::Post.should_receive(:new).and_return(@http_post)
       @http_post.should_receive(:body=).with(payload_args)
       @http.should_receive(:request).with(@http_post)
+      SuiteRest::RestService.should_receive(:parse_body).with("body")
 
       @post_svc.post(call_args)
     end
@@ -188,21 +161,5 @@ describe SuiteRest::RestService do
       @get_svc.type = :bad_type
       expect{ @get_svc.call }.to raise_error(RuntimeError)
     end
-
-    context "in a prodution environment" do
-      let(:uri) {"https://rest.netsuite.com/app/site/hosting/restlet.nl?script=#{script_id}&deploy=#{deploy_id}" }
-
-      before do
-        SuiteRest.configuration.sandbox = false
-      end
-
-      it "should return a production uri string" do
-        @get_svc.service_uri.should eq(uri)
-      end
-
-      # TODO: production section should have same tests as sandbox,
-      # but withotu duping every test. shared examples?
-    end
-
   end
 end
