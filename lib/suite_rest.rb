@@ -3,6 +3,7 @@ require 'net/http'
 require 'json'
 
 require "suite_rest/version"
+require "suite_rest/rest_service_utils"
 require "suite_rest/rest_service"
 
 module SuiteRest
