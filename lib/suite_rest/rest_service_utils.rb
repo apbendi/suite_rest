@@ -1,5 +1,6 @@
 module SuiteRest
   module RestServiceUtils
+    extend self
 
     def service_uri(script_id, deploy_id, is_sandbox)
       if is_sandbox
@@ -50,8 +51,21 @@ module SuiteRest
       begin
         JSON.parse(body)
       rescue JSON::ParserError
-        body.gsub(/"/, '')
-        # TODO? detect if this could be cast as an int, bool, or double and return as appropriate
+        string_body = body.gsub(/"/, '')
+
+        if string_body == string_body.to_i.to_s
+          return string_body.to_i
+        elsif string_body == string_body.to_f.to_s
+          return string_body.to_f
+        elsif string_body == 'null'
+          return nil
+        elsif string_body == 'false'
+          return false
+        elsif string_body == 'true'
+          return true
+        else
+          return string_body
+        end
       end
     end
 
