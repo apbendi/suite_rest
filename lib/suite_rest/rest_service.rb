@@ -24,14 +24,12 @@ module SuiteRest
       end
 
       self.class.add_request_fields(request, SuiteRest.configuration.auth_string)
-      response = http.request(request)
-      
-      # TODO? Error checking
+      response =  self.class.check_response(http.request(request))
 
       # By NS definition, delete restlets should not return anything, so we'll
       # return true/false based on server response
       if @type == :delete
-        response.instance_of?(Net::HTTPOK)
+        true
       else
         self.class.parse_body(response.body)
       end
@@ -50,10 +48,7 @@ module SuiteRest
 
       self.class.add_request_fields(request, SuiteRest.configuration.auth_string)
       request.body = self.class.payloadify(args, @args_def)
-
-      response = http.request(request)
-
-      # TODO? Error checking
+      response = self.class.check_response(http.request(request))
 
       self.class.parse_body(response.body)
     end

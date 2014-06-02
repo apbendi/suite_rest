@@ -60,7 +60,7 @@ describe SuiteRest::RestService do
         :args_def       => args_def
         )
 
-      @http = double(Net::HTTP, :use_ssl= => nil, :verify_mode= => nil, :request => double(Net::HTTPOK, :body => "body"))
+      @http = double(Net::HTTP, :use_ssl= => nil, :verify_mode= => nil, :request => double(Net::HTTPOK, :code => "200", :body => "body"))
       @http_get = double(Net::HTTP::Get, :add_field => nil)
       @http_post = double(Net::HTTP::Post, :add_field => nil)
       @http_put = double(Net::HTTP::Put, :add_field => nil)
@@ -142,7 +142,7 @@ describe SuiteRest::RestService do
     it "should build and execute a delete request" do
       SuiteRest::RestService.should_receive(:http).and_return(@http)
       Net::HTTP::Delete.should_receive(:new).and_return(@http_delete)
-      @http.should_receive(:request).with(@http_delete).and_return(double(Net::HTTPOK, :body => "", :instance_of? => true))
+      @http.should_receive(:request).with(@http_delete)
 
       @delete_svc.delete(call_args).should eq(true)
     end

@@ -125,6 +125,26 @@ describe SuiteRest::RestServiceUtils do
       end
     end
 
+    context "when testing check_response" do
+      before(:each) do
+        @response = double()
+      end
+
+      it "should return the response if the message is HTTP_OK" do
+        @response.should_receive(:code).and_return("200")
+
+        response_return = SuiteRest::RestServiceUtils.check_response(@response)
+        response_return.should eq(@response)
+      end
+
+      it "should raise an error if the message is not HTTPOK" do
+        @response.should_receive(:code).twice.and_return("404")
+        @response.should_receive(:msg).and_return("Not Found")
+
+        expect{ SuiteRest::RestServiceUtils.check_response(@response) }.to raise_error(RuntimeError)
+      end
+    end
+
     context "when testing parse_body" do
       it { SuiteRest::RestServiceUtils.parse_body("\"false\"").should eq(false) }
       it { SuiteRest::RestServiceUtils.parse_body("\"true\"").should eq(true) }

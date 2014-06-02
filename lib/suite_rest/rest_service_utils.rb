@@ -46,6 +46,14 @@ module SuiteRest
       end
       payload.to_json
     end
+    
+    def check_response(http_response)
+      if http_response.code == "200"
+        return http_response
+      else
+        raise "Error Code #{http_response.code}: #{http_response.msg}"
+      end
+    end
 
     def parse_body(body)
       begin
