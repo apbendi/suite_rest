@@ -151,6 +151,7 @@ describe SuiteRest::RestServiceUtils do
       it { SuiteRest::RestServiceUtils.parse_body("\"116\"").should eq(116) }
       it { SuiteRest::RestServiceUtils.parse_body("\"116.14\"").should eq(116.14) }
       it { SuiteRest::RestServiceUtils.parse_body("\"null\"").should eq(nil) }
+      it { SuiteRest::RestServiceUtils.parse_body("\"org.mozilla.javascript.Undefined@27129ebf\"").should eq(nil) }
       it { SuiteRest::RestServiceUtils.parse_body("\"One string return\"").should eq("One string return") }
       it { SuiteRest::RestServiceUtils.parse_body("\"1 string\"").should eq("1 string") }
       it { SuiteRest::RestServiceUtils.parse_body("\"true string\"").should eq("true string") }
@@ -159,8 +160,8 @@ describe SuiteRest::RestServiceUtils do
       it { SuiteRest::RestServiceUtils.parse_body("\"1.10\"").should eq("1.10") }
 
       it "should parse a JSON return correctly" do
-        rest_return = "{\"a\":5,\"b_key\":\"A string\",\"array_key\":[1,2,3,4,5]}"
-        correct_parse = {"a"=>5, "b_key"=>"A string", "array_key"=>[1, 2, 3, 4, 5]}
+        rest_return = "{\"a\":5,\"b_key\":\"A string\",\"array_key\":[1,2,3,4,5],\"subHash\":{\"a\":5,\"b\":\"A string\"}}"
+        correct_parse = {"a"=>5, "b_key"=>"A string", "array_key"=>[1, 2, 3, 4, 5], "subHash"=>{"a" => 5, "b" => "A string"}}
         SuiteRest::RestServiceUtils.parse_body(rest_return).should eq(correct_parse)
       end
     end

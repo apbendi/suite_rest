@@ -67,6 +67,8 @@ module SuiteRest
           return string_body.to_f
         elsif string_body == 'null'
           return nil
+        elsif string_body.start_with?("org.mozilla.javascript.Undefined")
+          return nil
         elsif string_body == 'false'
           return false
         elsif string_body == 'true'
