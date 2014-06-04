@@ -25,12 +25,12 @@ Or add this line to your application's Gemfile:
 Configure SuiteRest with your account information. The configuration block is global and needs only be done once per session.
 
 ```Ruby
-	SuiteRest.configure do |config|
-    	config.account    = 123456
-    	config.email      = "email@mail.com"
-    	config.role       = 1010
-    	config.signature  = "password"
-	end
+SuiteRest.configure do |config|
+	config.account    = 123456
+	config.email      = "email@mail.com"
+	config.role       = 1010
+	config.signature  = "password"
+end
 ```
 
 
@@ -39,28 +39,28 @@ Configure SuiteRest with your account information. The configuration block is gl
 Let's assume you have a NetSuite RESTlet deployed with the following function bound to `GET`:
 
 ```JavaScript
-	function getTest(datain) {
-		if(datain.worldDescription) {
-			return("Hello " + datain.worldDescription + " World");
-		} else {
-			return("Hello World");
-		}
+function getTest(datain) {
+	if(datain.worldDescription) {
+		return("Hello " + datain.worldDescription + " World");
+	} else {
+		return("Hello World");
 	}
+}
 ```
 
 Each RESTlet is defined by an **instance** of a `SuiteRest::RestService` object. Initialize the instance with the definition of the service.
 
 ```Ruby
-	get_world = SuiteRest::RestService.new( :type => :get,
-      										:script_id => 27,
-      										:deploy_id => 1,
-      										:args_def => [:world_description])
+get_world = SuiteRest::RestService.new( :type => :get,
+  										:script_id => 27,
+  										:deploy_id => 1,
+  										:args_def => [:world_description])
 ```
       
 Now simply `call` this service and get back a response:
 
 ```Ruby
-	get_world.call(:world_description => "Big") # "Hello Big World"
+get_world.call(:world_description => "Big") # "Hello Big World"
 ```
 
 Valid values for `:type` are the REST-ful services supported by NetSuite RESTlets: `:get`, `:put`, `:post`, `:delete`. Values for `:script_id` and `:deploy_id` are defined on your Script Deployment record in NetSuite.
@@ -70,31 +70,31 @@ An array of all argument names you will send to your RESTlet should be included 
 SuiteRest **only** manages case of parameters defined in `:args_def`. Keys in hashes, for example, will be converted to JSON and sent as-is to your RESTlet. For example the following Ruby hash…
 
 ```Ruby
-	some_data = {
-					:a => "Hello",
-					:b_key => "World",
-					"string_key" => :symbol_val
-				}
+some_data = {
+				:a => "Hello",
+				:b_key => "World",
+				"string_key" => :symbol_val
+			}
 ```
 
 …if passed in a argument to a RESTlet would appear as such in your JavaScript:
 
 ```JavaScript
-	// datain.someData
-	{
-		"a": "Hello",
-		"b_key": "World",
-		"string_key": "symbol_val"
-	}
+// datain.someData
+{
+	"a": "Hello",
+	"b_key": "World",
+	"string_key": "symbol_val"
+}
 ```
 
 To call the service with other args you should define a new service:
 
 ```Ruby
-	get_world_no_args = SuiteRest::RestService.new( :type => :get,
-      										:script_id => 27,
-      										:deploy_id => 1)
-    get_world_no_args.call # "Hello World"
+get_world_no_args = SuiteRest::RestService.new( :type => :get,
+  										:script_id => 27,
+  										:deploy_id => 1)
+get_world_no_args.call # "Hello World"
 ```
 
 ## Contributing
