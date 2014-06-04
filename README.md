@@ -54,7 +54,7 @@ Each RESTlet is defined by an **instance** of a `SuiteRest::RestService` object.
 get_world = SuiteRest::RestService.new( :type => :get,
   										:script_id => 27,
   										:deploy_id => 1,
-  										:args_def => [:world_description])
+  										:args_def => [:world_description] )
 ```
       
 Now simply `call` this service and get back a response:
@@ -63,7 +63,14 @@ Now simply `call` this service and get back a response:
 get_world.call(:world_description => "Big") # "Hello Big World"
 ```
 
-Valid values for `:type` are the REST-ful services supported by NetSuite RESTlets: `:get`, `:put`, `:post`, `:delete`. Values for `:script_id` and `:deploy_id` are defined on your Script Deployment record in NetSuite.
+Valid values for `:type` are the REST-ful services supported by NetSuite RESTlets:
+
+ * `:get`
+ * `:put`
+ * `:post`
+ * `:delete`
+
+Values for `:script_id` and `:deploy_id` are defined on your Script Deployment record in NetSuite.
 
 An array of all argument names you will send to your RESTlet should be included in `:args_def`. Note that SuiteRest automatically camelizes your parameter names so you can write idiomatic JavaScript in your RESTlet and idiomatic Ruby in your Ruby app. SuiteRest assumes this convention and could break if you use non-idiomatic names.
 
@@ -92,8 +99,8 @@ To call the service with other args you should define a new service:
 
 ```Ruby
 get_world_no_args = SuiteRest::RestService.new( :type => :get,
-  										:script_id => 27,
-  										:deploy_id => 1)
+  												:script_id => 27,
+  												:deploy_id => 1 )
 get_world_no_args.call # "Hello World"
 ```
 
