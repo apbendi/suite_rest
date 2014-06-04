@@ -8,9 +8,9 @@ Gem::Specification.new do |gem|
   gem.version       = SuiteRest::VERSION
   gem.authors       = ["Ben DiFrancesco"]
   gem.email         = ["ben.difrancesco@gmail.com"]
-  gem.description   = "Allows easy interaction with NetSuite RESTlets"
-  gem.summary       = ""
-  gem.homepage      = ""
+  gem.description   = "Easy interaction with NetSuite RESTlets"
+  gem.summary       = gem.description
+  gem.homepage      = "http://github.com/apbendi/suite_rest"
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
