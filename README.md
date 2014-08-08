@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/apbendi/suite_rest.svg?branch=master)](https://travis-ci.org/apbendi/suite_rest)
+
 # SuiteRest
 
 A gem to simplify interaction with NetSuite RESTlets. You will find SuiteRest useful if:
