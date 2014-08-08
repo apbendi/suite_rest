@@ -20,6 +20,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'json', '~> 1.8.1'
   
   gem.add_development_dependency 'rspec', '~> 2.10'
-  gem.add_development_dependency 'pry-debugger'
+  gem.add_development_dependency 'debugger', '~> 1.6.8'
+  gem.add_development_dependency 'pry-debugger', '~> 0.2.3'
   gem.add_development_dependency 'rake', '~>0.9.2.2'
 end
